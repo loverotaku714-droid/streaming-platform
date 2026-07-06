@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  color       String   @default("#ef4444")
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  videos Video[]
+}
+
+model Video {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  filePath    String
+  thumbnailPath String?
+  duration    Int      @default(0)
+  size        Int      @default(0)
+  mimeType    String   @default("video/mp4")
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  isFavorite  Boolean  @default(false)
+  views       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  watchHistory WatchHistory[]
+  playlistItems PlaylistItem[]
+}
+
+model WatchHistory {
+  id        String   @id @default(cuid())
+  videoId   String
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  progress  Float    @default(0)
+  watchedAt DateTime @default(now())
+}
+
+model Playlist {
+  id        String   @id @default(cuid())
+  name      String
+  description String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items PlaylistItem[]
+}
+
+model PlaylistItem {
+  id         String   @id @default(cuid())
+  playlistId String
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  videoId    String
+  video      Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  order      Int      @default(0)
+  addedAt    DateTime @default(now())
+
+  @@unique([playlistId, videoId])
+}
